@@ -1,7 +1,7 @@
 import { Users } from './entities/users.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindConditions, FindOneOptions } from 'typeorm';
 import { CreateUsersDto } from './dto/create-users.dto';
 import { UpdateUsersDto } from './dto/update-course.dto';
 
@@ -12,18 +12,36 @@ export class UsersService {
     private readonly usersRepository: Repository<Users>,
   ) {}
 
-  findAll() {
-    return this.usersRepository.find();
+  async findAll() {
+    return await this.usersRepository.find({
+      select: ['id', 'name', 'email', 'isAdmin'],
+      order: {
+        name: 'ASC',
+      },
+    });
+  }
+
+  async findOneOrFail(
+    conditions: FindConditions<Users>,
+    options?: FindOneOptions<Users>,
+  ) {
+    try {
+      return await this.usersRepository.findOneOrFail(conditions, options);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
 
   findOne(id: string) {
-    const user = this.usersRepository.findOne(id);
+    const course = this.usersRepository.findOne(id, {
+      select: ['id', 'name', 'email', 'isAdmin'],
+    });
 
-    if (!user) {
+    if (!course) {
       throw new NotFoundException(`Course ID ${id} not found`);
     }
 
-    return user;
+    return course;
   }
 
   async create(createUsersDto: CreateUsersDto) {

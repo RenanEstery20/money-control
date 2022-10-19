@@ -7,6 +7,7 @@ import {
   ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 import { v4 as uuidv4 } from 'uuid';
 @Entity('users')
@@ -39,5 +40,11 @@ export class Users {
     }
 
     this.id = uuidv4();
+  }
+
+  @BeforeInsert()
+  async setPassword(password: string) {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(password || this.password, salt);
   }
 }
